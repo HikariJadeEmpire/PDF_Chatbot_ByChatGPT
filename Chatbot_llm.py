@@ -31,6 +31,7 @@ from dotenv import load_dotenv, find_dotenv
 ############### FUNCTIONS & VARIABLES ################
 ######################################################
 
+mss = None ; mss_1 = None
 model_lists = ["gpt-3.5-turbo", "gpt-4"]
 my_logo = Image.open(fp='bubble-speech.png')
 
@@ -259,6 +260,8 @@ if prompt := st.chat_input("Your message"):
     st.session_state.messages.append({"role": "assistant", "content": full_response})
 
 # ERROR Catching
-for ch in [mss, mss_1] :
-    if ch is not None :
+if mss != None and mss_1 != None :
+    for ch in [mss, mss_1] :
         st.warning(f"Catched errors : {ch}")
+
+    
