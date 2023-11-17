@@ -65,9 +65,6 @@ def doc_show_meta(uploaded_files):
 
                 for pg in range(num_pages):
                     writer.add_page(reader.pages[pg])
-
-                    # Create directory if not exist
-                    os.makedirs(os.path.dirname(f"docs/{i.name[:-4]}_{n+1}.pdf"), exist_ok=True)
                     
                     with open(f"docs/{i.name[:-4]}_{n+1}.pdf", "wb") as output_stream:
                         writer.write(output_stream)
@@ -99,15 +96,17 @@ def doc_show_meta(uploaded_files):
 ######################## UX/UI #######################
 ######################################################
 
-load_dotenv(find_dotenv()) # read local .env file
+try :
+    load_dotenv(find_dotenv()) # read local .env file
+    openai_api_key = os.getenv('OPENAI_API_KEY_JIN')
+except :
+    openai_api_key = "sk-abc123def"
 
 st.set_page_config(page_title="KnowledgeGPT", page_icon="🤖", layout="wide")
 
 st.title("Hello World !")
 st.header("My name is Saturday.")
 st.write("This is my personal chatbot by ChatGPT , with customization for specific knowledge.")
-
-openai_api_key = os.getenv('OPENAI_API_KEY_JIN')
 
 col01, col02, col02_0 = st.columns(spec=[3,3,1], gap="large")
 
@@ -116,6 +115,8 @@ with col01 :
 
 # Check directory
 with col02 :
+    if not os.path.exists("docs") :
+        os.mkdir("docs")
     st.button('Check documents')
     if st.button("Remove PDF", type="primary") :
         for rmm in os.listdir("docs"):
@@ -181,7 +182,11 @@ memory = ConversationBufferMemory(
     return_messages=True
 )
 
-llm = ChatOpenAI(model_name=model, temperature=0)
+try :
+    llm = ChatOpenAI(model_name=model, temperature=0)
+except :
+    mss = "Did not find OpenAI API key"
+    llm = None
 
 if len(docs) >= 1 :
     try :
@@ -238,14 +243,14 @@ if prompt := st.chat_input("Your message"):
                 [
                     """EROR : You may upload document first  ,   ERROR MESSAGE : {a}""".format(a=na),
                     "You may need to check your limit on ChatGPT , If everything is fine you may try again.",
-                    "Please read the errors warnings or try again.",
+                    "Please read the errors warnings below or try again.",
                 ]
                 )
         except Exception as e :
             assistant_response = random.choice(
                 [
                     """EROR : {a}""".format(a=e),
-                    "Please read the errors warnings or try again.",
+                    "Please read the errors warnings below or try again.",
                 ]
                 )
     
@@ -260,8 +265,9 @@ if prompt := st.chat_input("Your message"):
     st.session_state.messages.append({"role": "assistant", "content": full_response})
 
 # ERROR Catching
-if mss != None and mss_1 != None :
-    for ch in [mss, mss_1] :
+
+for ch in [mss, mss_1] :
+    if ch is not None :
         st.warning(f"Catched errors : {ch}")
 
     
