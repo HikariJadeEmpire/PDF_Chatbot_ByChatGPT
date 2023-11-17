@@ -64,7 +64,10 @@ def doc_show_meta(uploaded_files):
 
                 for pg in range(num_pages):
                     writer.add_page(reader.pages[pg])
-                
+
+                    # Create directory if not exist
+                    os.makedirs(os.path.dirname(f"docs/{i.name[:-4]}_{n+1}.pdf"), exist_ok=True)
+                    
                     with open(f"docs/{i.name[:-4]}_{n+1}.pdf", "wb") as output_stream:
                         writer.write(output_stream)
 
