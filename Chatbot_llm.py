@@ -9,6 +9,7 @@
 import time
 import random
 import PyPDF2
+import openai
 
 from PIL import Image
 
@@ -34,20 +35,6 @@ from dotenv import load_dotenv, find_dotenv
 mss = None ; mss_1 = None
 model_lists = ["gpt-3.5-turbo", "gpt-4"]
 my_logo = Image.open(fp='bubble-speech.png')
-
-def api_sidebar(openai_api_key):
-    try :
-        api = st.text_input(label = "Your API Key", value = openai_api_key, label_visibility="visible", type="password")
-        st.write("Your first 4 characters API Key has already received as : ", api[:4]+'****'+api[-1])
-    except TypeError :
-        st.warning(
-            "Enter your OpenAI API Key in the sidebar. You can get key at : https://platform.openai.com/account/api-keys."
-        )
-    except Exception as e :
-        st.write("There might be some error\n>>> {e}".format(e=e))
-        st.warning(
-            "Enter your OpenAI API Key in the sidebar. You can get key at : https://platform.openai.com/account/api-keys."
-        )
 
 def space(num=2):
     for i in range(num):
@@ -96,12 +83,6 @@ def doc_show_meta(uploaded_files):
 ######################## UX/UI #######################
 ######################################################
 
-try :
-    load_dotenv(find_dotenv()) # read local .env file
-    openai_api_key = os.getenv('OPENAI_API_KEY_JIN')
-except :
-    openai_api_key = "sk-abc123def"
-
 st.set_page_config(page_title="KnowledgeGPT", page_icon="🤖", layout="wide")
 
 st.title("Hello World !")
@@ -110,8 +91,32 @@ st.write("This is my personal chatbot by ChatGPT , with customization for specif
 
 col01, col02, col02_0 = st.columns(spec=[3,3,1], gap="large")
 
+try :
+    load_dotenv(find_dotenv()) # read local .env file
+    openai_api_key = os.getenv('OPENAI_API_KEY_JIN')
+except :
+    openai_api_key = None
+
 with col01 :
-    api_sidebar(openai_api_key)
+    if openai_api_key is not None :
+        api = openai_api_key
+        st.write("Your first 4 characters API Key has already received as : ", api[:4]+'****'+api[-1])
+    else :
+        try :
+            api = st.text_input(label = "Your API Key", value = None, 
+                                        label_visibility="visible", type="password")
+            
+            st.write("Your first 4 characters API Key has already received as : ", api[:4]+'****'+api[-1])
+            
+        except TypeError :
+            st.warning(
+                "Enter your OpenAI API Key in the sidebar. You can get key at : https://platform.openai.com/account/api-keys."
+            )
+        except Exception as e :
+            st.write("There might be some error\n>>> {e}".format(e=e))
+            st.warning(
+                "Enter your OpenAI API Key in the sidebar. You can get key at : https://platform.openai.com/account/api-keys."
+            )
 
 # Check directory
 with col02 :
@@ -160,12 +165,12 @@ for loader in os.listdir("docs"):
 
 space(3)
 
-if len(docs) >= 1 :
+if len(docs) > 0 :
     with st.spinner("Indexing document... This may take a while  ⏳"):
         splits = r_splitter.split_documents(docs)
 
         try :
-            db = FAISS.from_documents(splits, OpenAIEmbeddings())
+            db = FAISS.from_documents(splits, OpenAIEmbeddings(api_key=api))
         except AttributeError as a :
             db = None
             mss_1 = f"{a}"
@@ -183,7 +188,7 @@ memory = ConversationBufferMemory(
 )
 
 try :
-    llm = ChatOpenAI(model_name=model, temperature=0)
+    llm = ChatOpenAI(api_key= api, model_name=model, temperature=0)
 except :
     mss = "Did not find OpenAI API key"
     llm = None
