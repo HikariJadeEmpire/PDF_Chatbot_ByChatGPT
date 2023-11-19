@@ -9,7 +9,6 @@
 import time
 import random
 import PyPDF2
-import openai
 
 from PIL import Image
 
