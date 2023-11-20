@@ -17,7 +17,7 @@ from PIL import Image
 import streamlit as st
 
 from langchain.chat_models import ChatOpenAI
-from langchain.chains import ConversationalRetrievalChain
+from langchain.chains import ConversationalRetrievalChain, LLMChain
 from langchain.document_loaders import PyPDFLoader
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.memory import ConversationBufferMemory
@@ -92,7 +92,7 @@ col01, col02, col02_0 = st.columns(spec=[3,3,1], gap="large")
 
 try :
     load_dotenv(find_dotenv()) # read local .env file
-    openai_api_key = os.getenv('OPENAI_API_KEY')
+    openai_api_key = os.getenv('OPENAI_API_KEY_H')
 except :
     openai_api_key = None
 
@@ -186,19 +186,6 @@ memory = ConversationBufferMemory(
     return_messages=True
 )
 
-# Build prompt
-from langchain.prompts import PromptTemplate
-template = """Use the following pieces of context to answer the question at the end.
-If you don't know the answer, 
-just say that you don't know, 
-don't try to make up an answer. 
-Use three sentences maximum. Keep the answer as concise as possible.
-
-{context}
-Question: {question}
-Helpful Answer:"""
-QA_CHAIN_PROMPT = PromptTemplate(input_variables=["context", "question"],template=template,)
-
 try :
     llm = ChatOpenAI(api_key= api, model_name=model, temperature=0)
 except :
@@ -211,9 +198,8 @@ if len(docs) >= 1 :
             llm,
             retriever=db.as_retriever(search_type="similarity", search_kwargs={"k": 5}),
             memory=memory,
-            return_source_documents=True,
-            return_generated_question=True,
-            chain_type_kwargs={"prompt": QA_CHAIN_PROMPT}
+            return_source_documents=False,
+            return_generated_question=False,
         )
     except AttributeError as a :
         db = None
@@ -255,7 +241,8 @@ if prompt := st.chat_input("Your message"):
         message_placeholder = st.empty()
         full_response = ""
         try :
-            assistant_response = qa({"question": prompt})
+            result = qa({"question": prompt})
+            assistant_response = result['answer']
         except NameError as na :
             assistant_response = random.choice(
                 [
@@ -268,7 +255,7 @@ if prompt := st.chat_input("Your message"):
             assistant_response = random.choice(
                 [
                     """EROR : {a}""".format(a=e),
-                    "Please read the errors warnings below or try again.",
+                    "Please read the errors warnings below or try again.\nERROR : {a}".format(a=e),
                 ]
                 )
     
