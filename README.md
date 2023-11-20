@@ -4,8 +4,8 @@ GOAL : <br>
 > Build a chatbot with specific knowledge extracted from the PDF file you uploaded using ChatGPT.
 
 # Content
-- [Preview]()
-- [Usage]()
+- [Preview](https://github.com/HikariJadeEmpire/PDF_Chatbot_ByChatGPT#preview)
+- [Usage](https://github.com/HikariJadeEmpire/PDF_Chatbot_ByChatGPT#usage)
 
 # Preview
 
@@ -38,3 +38,11 @@ It works perfectly fine.
 you can see the code and details (e.g.libraries version) here : <br>
 
 [![](https://img.shields.io/badge/Git-.py-rgb(208,211,212)?style=f?style=flat-square&logo=github&logoColor=white)](https://github.com/HikariJadeEmpire/PDF_Chatbot_ByChatGPT/blob/main/Chatbot_llm.py)
+
+<br>
+Guide : <br>
+
+- clone this github repo
+- install python libraries as included in the ```Chatbot_llm.py``` file
+- register API Key in ChatGPT
+- enjoy
