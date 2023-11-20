@@ -217,7 +217,7 @@ if len(docs) >= 1 :
 st.header("Let's Chat with your document")
 
 with st.chat_message("assistant"):
-    st.write("Hello human")
+    st.write("Hello, my name is Saturday, you can ask me anything!")
 
 # Initialize chat history
 if "messages" not in st.session_state:
