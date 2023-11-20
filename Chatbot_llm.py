@@ -23,6 +23,7 @@ from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.memory import ConversationBufferMemory
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores.faiss import FAISS
+from langchain.prompts import PromptTemplate
 
 import os
 from dotenv import load_dotenv, find_dotenv
