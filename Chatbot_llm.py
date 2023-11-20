@@ -32,7 +32,7 @@ from dotenv import load_dotenv, find_dotenv
 ######################################################
 
 mss = None ; mss_1 = None
-model_lists = ["gpt-3.5-turbo", "gpt-4"]
+model_lists = ["gpt-3.5-turbo", "gpt-4", 'gpt-4-1106-preview']
 my_logo = Image.open(fp='bubble-speech.png')
 
 def space(num=2):
@@ -92,7 +92,7 @@ col01, col02, col02_0 = st.columns(spec=[3,3,1], gap="large")
 
 try :
     load_dotenv(find_dotenv()) # read local .env file
-    openai_api_key = os.getenv('OPENAI_API_KEY_JIN')
+    openai_api_key = os.getenv('OPENAI_API_KEY')
 except :
     openai_api_key = None
 
@@ -186,6 +186,19 @@ memory = ConversationBufferMemory(
     return_messages=True
 )
 
+# Build prompt
+from langchain.prompts import PromptTemplate
+template = """Use the following pieces of context to answer the question at the end.
+If you don't know the answer, 
+just say that you don't know, 
+don't try to make up an answer. 
+Use three sentences maximum. Keep the answer as concise as possible.
+
+{context}
+Question: {question}
+Helpful Answer:"""
+QA_CHAIN_PROMPT = PromptTemplate(input_variables=["context", "question"],template=template,)
+
 try :
     llm = ChatOpenAI(api_key= api, model_name=model, temperature=0)
 except :
@@ -196,10 +209,11 @@ if len(docs) >= 1 :
     try :
         qa = ConversationalRetrievalChain.from_llm(
             llm,
-            retriever=db.as_retriever(search_type="similarity"),
+            retriever=db.as_retriever(search_type="similarity", search_kwargs={"k": 5}),
             memory=memory,
             return_source_documents=True,
             return_generated_question=True,
+            chain_type_kwargs={"prompt": QA_CHAIN_PROMPT}
         )
     except AttributeError as a :
         db = None
