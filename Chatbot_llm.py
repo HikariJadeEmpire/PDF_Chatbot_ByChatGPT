@@ -32,7 +32,7 @@ from dotenv import load_dotenv, find_dotenv
 ######################################################
 
 mss = None ; mss_1 = None
-model_lists = ["gpt-3.5-turbo", "gpt-4", 'gpt-4-1106-preview']
+model_lists = ['gpt-4-1106-preview', "gpt-3.5-turbo", "gpt-4", ]
 my_logo = Image.open(fp='bubble-speech.png')
 
 def space(num=2):
@@ -196,7 +196,7 @@ if len(docs) >= 1 :
     try :
         qa = ConversationalRetrievalChain.from_llm(
             llm,
-            retriever=db.as_retriever(search_type="similarity", search_kwargs={"k": 5}),
+            retriever=db.as_retriever(search_type="similarity", search_kwargs={"k": 3}),
             memory=memory,
             return_source_documents=False,
             return_generated_question=False,
