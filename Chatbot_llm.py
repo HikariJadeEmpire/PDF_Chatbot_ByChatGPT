@@ -159,7 +159,11 @@ r_splitter = RecursiveCharacterTextSplitter(
 docs = []
 for loader in os.listdir("docs"):
     if loader is not None :
-        docs.extend(PyPDFLoader("docs/"+loader).load())
+        try :
+            docs.extend(PyPDFLoader("docs/"+loader).load())
+        except Exception as ee :
+            st.warning(f"Cated ERROR : {ee}"
+                       "\n ... May be you can remove PDF and UPLOAD again.")
     else : break
 
 space(3)
