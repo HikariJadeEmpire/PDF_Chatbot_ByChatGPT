@@ -169,7 +169,7 @@ if len(docs) > 0 :
         splits = r_splitter.split_documents(docs)
 
         try :
-            db = FAISS.from_documents(splits, OpenAIEmbeddings(api_key=api))
+            db = FAISS.from_documents( splits, OpenAIEmbeddings( api_key=api ) )
         except AttributeError as a :
             db = None
             mss_1 = f"{a}"
