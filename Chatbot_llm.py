@@ -22,7 +22,12 @@ from langchain.document_loaders import PyPDFLoader
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.memory import ConversationBufferMemory
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+
 from langchain.vectorstores.faiss import FAISS
+# from langchain.vectorstores.elasticsearch import ElasticsearchStore
+
+from langchain.prompts.example_selector import SemanticSimilarityExampleSelector
+from langchain.prompts import FewShotChatMessagePromptTemplate, ChatPromptTemplate
 
 import os
 from dotenv import load_dotenv, find_dotenv
@@ -31,7 +36,7 @@ from dotenv import load_dotenv, find_dotenv
 ############### FUNCTIONS & VARIABLES ################
 ######################################################
 
-mss = None ; mss_1 = None
+mss = None ; mss_1 = None ; mss_2 = None
 model_lists = ['gpt-4-1106-preview', "gpt-3.5-turbo", "gpt-4", ]
 my_logo = Image.open(fp='bubble-speech.png')
 
@@ -104,15 +109,18 @@ with col01 :
         try :
             api = st.text_input(label = "Your API Key", value = None, 
                                         label_visibility="visible", type="password")
-            
-            st.write("Your first 4 characters API Key has already received as : ", api[:4]+'****'+api[-1])
+            if len(api) == 51 and api[:3] == 'sk-' :
+                st.write("Your API Key has already received as : ", api[:4]+'****'+api[-1])
+            else :
+                st.warning("OpenAI API Key must start with \'sk-...\'")
+                raise TypeError
             
         except TypeError :
             st.warning(
                 "Enter your OpenAI API Key in the sidebar. You can get key at : https://platform.openai.com/account/api-keys."
             )
-        except Exception as e :
-            st.write("There might be some error\n>>> {e}".format(e=e))
+        except Exception as e0 :
+            st.write("There might be some error\n>>> {e}".format(e=e0))
             st.warning(
                 "Enter your OpenAI API Key in the sidebar. You can get key at : https://platform.openai.com/account/api-keys."
             )
@@ -152,8 +160,8 @@ doc_show_meta(uploaded_files)
 ######################################################
 
 r_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=600,
-    chunk_overlap=100,
+    chunk_size=1200,
+    chunk_overlap=400,
     separators=["\n\n", "\n", "(?<=\. )", " ", ""]
 )
 docs = []
@@ -161,8 +169,8 @@ for loader in os.listdir("docs"):
     if loader is not None :
         try :
             docs.extend(PyPDFLoader("docs/"+loader).load())
-        except Exception as ee :
-            st.warning(f"Cated ERROR : {ee}"
+        except Exception as e1 :
+            st.warning(f" [ Documents ERROR ] : {e1}"
                        "\n ... May be you can remove PDF and UPLOAD again.")
     else : break
 
@@ -174,16 +182,61 @@ if len(docs) > 0 :
 
         try :
             db = FAISS.from_documents( splits, OpenAIEmbeddings( api_key=api ) )
+            # db = ElasticsearchStore
         except AttributeError as a :
             db = None
             mss_1 = f"{a}"
-        except Exception as e :
+        except Exception as e2 :
             db = None
-            mss_1 = f"{e}"
+            mss_1 = f" [ Vectors Store EROR ] : {e2}"
 
 ######################################################
 ##################### CHAT AREA ######################
 ######################################################
+
+# Create Prompt
+
+# try :
+#     example_prompt = example_prompt = ChatPromptTemplate.from_messages(
+#     [
+#         ("user", "{Word}"),
+#         ("ai", "{Synonym}"),
+#     ]
+#     )
+
+#     # Examples of a pretend task of creating antonyms.
+#     examples = [
+#         {"Word": "เปลี่ยนเป็นการขับเคลื่อนล้อหลังหรือการขับเคลื่อน 4 ล้อยังไง", "Synonym": "ไฟแสดงการทำงาน 2WD/4WD จะแสดงสถานะการตั้งค่า ปุ่มเลือกโหมดการขับเคลื่อน 4 ล้อ ให้ดูเพิ่มเติมเกี่ยวกับเรื่อง \"ไฟแสดงการทำงาน 2WD/4WD และไฟแสดงความเร็วตํ่า\""},
+#         {"Word": "มีไฟเตือนระบบพวงมาลัยไฟฟ้า ควรทำยังไง", "Synonym": "หากไฟเตือนสว่างขึ้นขณะที่เครื่องยนต์ทำงาน ให้นำรถเข้ารับการตรวจสอบที่ศูนย์บริการมิตซูบิชิที่ได้รับอนุญาตโดยเร็วที่สุดโดยการบังคับพวงมาลัยจะทำได้ยากขึ้น"},
+#         {"Word": "จะลากรถต้องทำยังไงบ้าง", "Synonym": """หากรถของคุณจำเป็นต้องถูกลากหากจำเป็นต้องลากรถ แนะนำให้คุณใช้บริการของศูนย์บริการมิตซูบิชที่ได้รับอนุญาตหรือสถานประกอบการที่ให้บริการลากรถ\
+#          ควรเรียกใช้บริการลากรถในกรณีต่อไปนี้\
+#          1.เครื่องยนต์ทำงานแต่รถไม่สามารถเคลื่อนตัวได้หรือมีเสียงดังผิดปกติ\
+#          2.เมื่อตรวจสอบใต้ท้องรถแล้วพบว่ามีนํ้ามันหรือสารอื่นรั่วซึม\
+#          3.หากรถของคุณติดหล่ม อย่าพยายามลากรถเอง กรุณาติดต่อศูนย์บริการมิตซูบิชิที่ได้รับอนุญาตหรือสถานประกอบการที่ให้บริการลากรถเพื่อขอความช่วยเหลือ\
+#          แต่หากว่าไม่สามารถเรียกใช้บริการลากรถจากศูนย์บริการมิตซูบิชิหรือสถานประกอบการได้ \
+#          คุณควรลากรถด้วยความระมัดระวังตามคำแนะนำในเรื่อง “การลากรถในกรณีฉุกเฉิน” \
+#          ในบทนี้ข้อบังคับเกี่ยวกับการลากรถอาจแตกต่างกันไปในแต่ละประเทศ \
+#          คุณควรปฏิบัติตามที่พระราชบัญญัติจราจรทางบกกำหนดไว้เกี่ยวกับการลากรถด้วยรถลาก"""},
+#         # {"Word": "", "Synonym": ""},
+#     ]
+
+#     few_shot_prompt = FewShotChatMessagePromptTemplate(
+#                             example_prompt=example_prompt,
+#                             examples=examples,
+#                         )
+    
+#     final_prompt = ChatPromptTemplate.from_messages(
+#     [
+#         ("system", """You are an assistant who will guide humans about the car by using provided document."""),
+#         few_shot_prompt,
+#         ("human", "{input}"),
+#     ]
+#     )
+
+# except Exception as e3 :
+#     mss_2 = f" [ Prompt EROR ] : {e3}"
+
+# Memory
 
 memory = ConversationBufferMemory(
     memory_key="chat_history",
@@ -198,19 +251,21 @@ except :
 
 if len(docs) >= 1 :
     try :
+
         qa = ConversationalRetrievalChain.from_llm(
             llm,
-            retriever=db.as_retriever(search_type="similarity", search_kwargs={"k": 3}),
+            retriever=db.as_retriever(search_type="mmr", search_kwargs={"k": 4}),
             memory=memory,
             return_source_documents=False,
             return_generated_question=False,
         )
+
     except AttributeError as a :
         db = None
         mss = f"{a}"
-    except Exception as e :
+    except Exception as e4 :
         db = None
-        mss = f"{e}"
+        mss = f" [ LLM EROR ] : {e4}"
 
 # result = qa({"question": question})
 
@@ -245,8 +300,9 @@ if prompt := st.chat_input("Your message"):
         message_placeholder = st.empty()
         full_response = ""
         try :
+            # prompt = final_prompt.format(input=prompt)
             result = qa({"question": prompt})
-            assistant_response = result['answer']
+            assistant_response = """{r}""".format(r=result['answer'])
         except NameError as na :
             assistant_response = random.choice(
                 [
@@ -275,7 +331,7 @@ if prompt := st.chat_input("Your message"):
 
 # ERROR Catching
 
-for ch in [mss, mss_1] :
+for ch in [mss, mss_1, mss_2] :
     if ch is not None :
         st.warning(f"Catched errors : {ch}")
 
