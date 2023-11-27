@@ -5,6 +5,9 @@
 # PIL : 9.4.0
 # Streamlit : 1.28.2
 # langchain : 0.0.333
+# deep_translator version : 1.9.1
+
+# pip install -U deep-translator
 
 import time
 import random
@@ -31,13 +34,15 @@ from langchain.prompts import FewShotChatMessagePromptTemplate, ChatPromptTempla
 
 import os
 from dotenv import load_dotenv, find_dotenv
+# from deep_translator import GoogleTranslator, single_detection
 
 ######################################################
 ############### FUNCTIONS & VARIABLES ################
 ######################################################
 
-mss = None ; mss_1 = None ; mss_2 = None
-model_lists = ['gpt-4-1106-preview', "gpt-3.5-turbo", "gpt-4", ]
+mss = None ; mss_1 = None ; mss_2 = None ; mss_0 = None
+
+model_lists = [ "gpt-3.5-turbo", 'gpt-4-1106-preview', "gpt-4", ]
 my_logo = Image.open(fp='bubble-speech.png')
 
 def space(num=2):
@@ -71,7 +76,7 @@ def doc_show_meta(uploaded_files):
                             number of page : {c}
                             """.format(a=i.name, b=i.type, c=num_pages))
                 with col06 :
-                    st.subheader("example file : {n}".format(n=n))
+                    st.subheader("example file : {n}".format(n=n+1))
                     st.write(reader.pages[0].extract_text()[0:500])
         else :
             st.warning(
@@ -161,7 +166,7 @@ doc_show_meta(uploaded_files)
 
 r_splitter = RecursiveCharacterTextSplitter(
     chunk_size=1200,
-    chunk_overlap=400,
+    chunk_overlap=300,
     separators=["\n\n", "\n", "(?<=\. )", " ", ""]
 )
 docs = []
@@ -186,15 +191,15 @@ if len(docs) > 0 :
         except AttributeError as a :
             db = None
             mss_1 = f"{a}"
-        except Exception as e2 :
+        except Exception as e3 :
             db = None
-            mss_1 = f" [ Vectors Store EROR ] : {e2}"
+            mss_1 = f" [ Vectors Store EROR ] : {e3}"
 
 ######################################################
 ##################### CHAT AREA ######################
 ######################################################
 
-# Create Prompt
+################# Create Prompt #################
 
 # try :
 #     example_prompt = example_prompt = ChatPromptTemplate.from_messages(
@@ -206,9 +211,9 @@ if len(docs) > 0 :
 
 #     # Examples of a pretend task of creating antonyms.
 #     examples = [
-#         {"Word": "เปลี่ยนเป็นการขับเคลื่อนล้อหลังหรือการขับเคลื่อน 4 ล้อยังไง", "Synonym": "ไฟแสดงการทำงาน 2WD/4WD จะแสดงสถานะการตั้งค่า ปุ่มเลือกโหมดการขับเคลื่อน 4 ล้อ ให้ดูเพิ่มเติมเกี่ยวกับเรื่อง \"ไฟแสดงการทำงาน 2WD/4WD และไฟแสดงความเร็วตํ่า\""},
-#         {"Word": "มีไฟเตือนระบบพวงมาลัยไฟฟ้า ควรทำยังไง", "Synonym": "หากไฟเตือนสว่างขึ้นขณะที่เครื่องยนต์ทำงาน ให้นำรถเข้ารับการตรวจสอบที่ศูนย์บริการมิตซูบิชิที่ได้รับอนุญาตโดยเร็วที่สุดโดยการบังคับพวงมาลัยจะทำได้ยากขึ้น"},
-#         {"Word": "จะลากรถต้องทำยังไงบ้าง", "Synonym": """หากรถของคุณจำเป็นต้องถูกลากหากจำเป็นต้องลากรถ แนะนำให้คุณใช้บริการของศูนย์บริการมิตซูบิชที่ได้รับอนุญาตหรือสถานประกอบการที่ให้บริการลากรถ\
+#         {"Word": "ต้องการเปลี่ยนเป็นโหมดการขับเคลื่อน 4 ล้อ หรือขับเคลื่อนล้อหลังทำยังไง", "Synonym": "ไฟแสดงการทำงาน 2WD/4WD จะแสดงสถานะการตั้งค่า ปุ่มเลือกโหมดการขับเคลื่อน 4 ล้อ ให้ดูเพิ่มเติมเกี่ยวกับเรื่อง \"ไฟแสดงการทำงาน 2WD/4WD และไฟแสดงความเร็วตํ่า\""},
+#         {"Word": "ไฟแจ้งเตือนบริเวณหน้าปัดทำงาน ควรทำยังไง", "Synonym": "หากไฟเตือนสว่างขึ้นขณะที่เครื่องยนต์ทำงาน ให้นำรถเข้ารับการตรวจสอบที่ศูนย์บริการมิตซูบิชิที่ได้รับอนุญาตโดยเร็วที่สุดโดยการบังคับพวงมาลัยจะทำได้ยากขึ้น"},
+#         {"Word": "จะลากรถต้องทำยังไง", "Synonym": """หากรถของคุณจำเป็นต้องถูกลากหากจำเป็นต้องลากรถ แนะนำให้คุณใช้บริการของศูนย์บริการมิตซูบิชที่ได้รับอนุญาตหรือสถานประกอบการที่ให้บริการลากรถ\
 #          ควรเรียกใช้บริการลากรถในกรณีต่อไปนี้\
 #          1.เครื่องยนต์ทำงานแต่รถไม่สามารถเคลื่อนตัวได้หรือมีเสียงดังผิดปกติ\
 #          2.เมื่อตรวจสอบใต้ท้องรถแล้วพบว่ามีนํ้ามันหรือสารอื่นรั่วซึม\
@@ -227,14 +232,16 @@ if len(docs) > 0 :
     
 #     final_prompt = ChatPromptTemplate.from_messages(
 #     [
-#         ("system", """You are an assistant who will guide humans about the car by using provided document."""),
+#         ("system", """You are an assistant who will guide humans about the car by using provided document and translate your answer to Thai language."""),
 #         few_shot_prompt,
 #         ("human", "{input}"),
 #     ]
 #     )
 
-# except Exception as e3 :
-#     mss_2 = f" [ Prompt EROR ] : {e3}"
+# except Exception as e4 :
+#     mss_2 = f" [ Prompt EROR ] : {e4}"
+
+#################################################
 
 # Memory
 
@@ -263,9 +270,9 @@ if len(docs) >= 1 :
     except AttributeError as a :
         db = None
         mss = f"{a}"
-    except Exception as e4 :
+    except Exception as e5 :
         db = None
-        mss = f" [ LLM EROR ] : {e4}"
+        mss = f" [ LLM EROR ] : {e5}"
 
 # result = qa({"question": question})
 
@@ -300,7 +307,10 @@ if prompt := st.chat_input("Your message"):
         message_placeholder = st.empty()
         full_response = ""
         try :
+            
+            # prompt = GoogleTranslator(source='auto', target='en').translate(prompt)
             # prompt = final_prompt.format(input=prompt)
+
             result = qa({"question": prompt})
             assistant_response = """{r}""".format(r=result['answer'])
         except NameError as na :
@@ -331,7 +341,7 @@ if prompt := st.chat_input("Your message"):
 
 # ERROR Catching
 
-for ch in [mss, mss_1, mss_2] :
+for ch in [mss, mss_0, mss_1, mss_2] :
     if ch is not None :
         st.warning(f"Catched errors : {ch}")
 
