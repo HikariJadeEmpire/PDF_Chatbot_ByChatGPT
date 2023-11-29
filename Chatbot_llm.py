@@ -165,8 +165,8 @@ doc_show_meta(uploaded_files)
 ######################################################
 
 r_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=1200,
-    chunk_overlap=300,
+    chunk_size=600,
+    chunk_overlap=100,
     separators=["\n\n", "\n", "(?<=\. )", " ", ""]
 )
 docs = []
