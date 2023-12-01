@@ -1,0 +1,9 @@
+PyPDF2 == 3.0.1
+pillow == 9.4.0
+Streamlit == 1.28.2
+langchain == 0.0.333
+tiktoken
+pypdf
+openai
+python-dotenv
+faiss-cpu
