@@ -37,12 +37,14 @@ It works perfectly fine.
 
 you can see the code and details (e.g.libraries version) here : <br>
 
-[![](https://img.shields.io/badge/Git-.py-rgb(208,211,212)?style=f?style=flat-square&logo=github&logoColor=white)](https://github.com/HikariJadeEmpire/PDF_Chatbot_ByChatGPT/blob/main/Chatbot_llm.py)
+[![](https://img.shields.io/badge/Git-.py-rgb(208,211,212)?style=f?style=flat-square&logo=github&logoColor=white)](https://github.com/HikariJadeEmpire/PDF_Chatbot_ByChatGPT/blob/main/app/Chatbot_llm.py)
 
 <br>
 Guide : <br>
 
 - clone this github repo
-- install python libraries as included in the ```Chatbot_llm.py``` file
-- register API Key in ChatGPT
-- enjoy
+- set current directory to ```this_repo/app```
+- run Dockerfile ```docker build -t test:0 .```
+- run this command ```docker run --name chatbot -d -p 8501:8501 test:0```
+- after running the command above, go to your Web Browser and type this on url search ```localhost:8501```
+
