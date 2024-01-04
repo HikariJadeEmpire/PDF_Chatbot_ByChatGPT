@@ -17,21 +17,22 @@ User Interface : <br>
 
 <br>
 
-<img width="1000" alt="Screenshot 2566-11-20 at 14 45 32" src="https://github.com/HikariJadeEmpire/PDF_Chatbot_ByChatGPT/assets/118663358/81417468-31c3-4e05-8bf5-b11502d033d6">
+<img width="1406" alt="image" src="https://github.com/HikariJadeEmpire/PDF_Chatbot_ByChatGPT/assets/118663358/7e90be4c-eb89-4979-a5e5-e15e7fb227eb">
 
 <br><br>
 The picture below displays basic information from your uploaded PDF file.
 
 <br>
 
-<img width="1000" alt="Screenshot 2566-11-20 at 14 25 50" src="https://github.com/HikariJadeEmpire/PDF_Chatbot_ByChatGPT/assets/118663358/ec7927de-4f8e-4ffb-9a41-3e8d7556522c">
+<img width="1406" alt="image" src="https://github.com/HikariJadeEmpire/PDF_Chatbot_ByChatGPT/assets/118663358/724a5f8b-2b34-4227-b7a8-616ed856ea59">
+
 
 <br><br>
 The picture below shows the result of chatting with Saturday about your uploaded PDF. <br>
 It works perfectly fine.
 
 <br>
-<img width="1000" alt="Screenshot 2566-11-20 at 14 26 17" src="https://github.com/HikariJadeEmpire/PDF_Chatbot_ByChatGPT/assets/118663358/bb6a1952-5c50-486b-98ab-7fefe78ee005">
+<img width="1406" alt="image" src="https://github.com/HikariJadeEmpire/PDF_Chatbot_ByChatGPT/assets/118663358/50f2dfc1-7603-4fa7-a4ee-df7ccb81caad">
 
 # Usage
 
