@@ -7,3 +7,4 @@ pypdf
 openai
 python-dotenv
 faiss-cpu
+chromadb == 0.4.21

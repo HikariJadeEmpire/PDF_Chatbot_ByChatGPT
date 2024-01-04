@@ -18,6 +18,7 @@ from PIL import Image
 # Modules to import
 
 import streamlit as st
+import chromadb
 
 from langchain.chat_models import ChatOpenAI
 from langchain.chains import ConversationalRetrievalChain
@@ -26,6 +27,7 @@ from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.memory import ConversationBufferMemory
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
+from langchain.vectorstores import Chroma
 from langchain.vectorstores.faiss import FAISS
 # from langchain.vectorstores.elasticsearch import ElasticsearchStore
 
@@ -40,7 +42,7 @@ from dotenv import load_dotenv, find_dotenv
 ############### FUNCTIONS & VARIABLES ################
 ######################################################
 
-mss = None ; mss_1 = None ; mss_2 = None ; mss_0 = None
+mss = None ; mss_1 = None ; mss_2 = None ; mss_0 = None ; mss_3 = None
 
 model_lists = [ "gpt-3.5-turbo", 'gpt-4-1106-preview', "gpt-4", ]
 my_logo = Image.open(fp='bubble-speech.png')
@@ -130,6 +132,12 @@ with col01 :
                 "Enter your OpenAI API Key in the sidebar. You can get key at : https://platform.openai.com/account/api-keys."
             )
 
+    database = st.selectbox(
+                        'select database',
+                        ('ChromaDB', 'FAISS'))
+
+    st.write('You selected:', database)
+
 # Check directory
 with col02 :
     if not os.path.exists("docs") :
@@ -181,13 +189,47 @@ for loader in os.listdir("docs"):
 
 space(3)
 
+### ChromaDB ###
+try :
+    client = chromadb.PersistentClient(path="mydb/")
+    from chromadb.utils import embedding_functions
+
+    openai_ef = embedding_functions.OpenAIEmbeddingFunction(
+                    api_key=api,
+                    model_name="text-embedding-ada-002"
+                )
+    collection = client.get_or_create_collection(name="data00", embedding_function=openai_ef)
+except Exception as e6:
+    mss_3 = f" [ API EROR ] : {e6}"
+
+###
+
 if len(docs) > 0 :
     with st.spinner("Indexing document... This may take a while  ⏳"):
         splits = r_splitter.split_documents(docs)
 
         try :
-            db = FAISS.from_documents( splits, OpenAIEmbeddings( api_key=api ) )
-            # db = ElasticsearchStore
+            if database == 'ChromaDB':
+                doc = [splits[i].page_content for i in range(len(splits))]
+                meta = [splits[i].metadata for i in range(len(splits))]
+                idd = ["id{a}".format(a=i+1) for i in range(len(splits))]
+
+                doc_embed = openai_ef(doc)
+                collection.add(
+                                embeddings = doc_embed,
+                                documents = doc,
+                                metadatas = meta,
+                                ids = idd
+                            )
+
+                db = Chroma(
+                            client=client,
+                            collection_name="data00",
+                            embedding_function=OpenAIEmbeddings( api_key=api ),
+                        )
+            elif database == 'FAISS':
+                db = FAISS.from_documents( splits, OpenAIEmbeddings( api_key=api ) )
+
         except AttributeError as a :
             db = None
             mss_1 = f"{a}"
@@ -247,7 +289,8 @@ if len(docs) > 0 :
 
 memory = ConversationBufferMemory(
     memory_key="chat_history",
-    return_messages=True
+    return_messages=True,
+    output_key='answer',
 )
 
 try :
@@ -263,7 +306,7 @@ if len(docs) >= 1 :
             llm,
             retriever=db.as_retriever(search_type="mmr", search_kwargs={"k": 4}),
             memory=memory,
-            return_source_documents=False,
+            return_source_documents=True,
             return_generated_question=False,
         )
 
@@ -311,8 +354,12 @@ if prompt := st.chat_input("Your message"):
             # prompt = GoogleTranslator(source='auto', target='en').translate(prompt)
             # prompt = final_prompt.format(input=prompt)
 
+            start = time.time()
             result = qa({"question": prompt})
-            assistant_response = """{r}""".format(r=result['answer'])
+            end = time.time()
+            assistant_response = """{r}\n\n----------\n\nref : {ref}\n\ntime : {t:.4f} seconds""".format(r=result['answer'],
+                                                                      ref=(result['source_documents'])[0].page_content,
+                                                                      t=end-start)
         except NameError as na :
             assistant_response = random.choice(
                 [
@@ -330,8 +377,8 @@ if prompt := st.chat_input("Your message"):
                 )
     
         # Simulate stream of response with milliseconds delay
-        for chunk in assistant_response.split():
-            full_response += chunk + " "
+        for chunk in assistant_response.split("\n"):
+            full_response += chunk + "\n"
             time.sleep(0.05)
             # Add a blinking cursor to simulate typing
             message_placeholder.markdown(full_response + "▌")
@@ -341,7 +388,7 @@ if prompt := st.chat_input("Your message"):
 
 # ERROR Catching
 
-for ch in [mss, mss_0, mss_1, mss_2] :
+for ch in [mss, mss_0, mss_1, mss_2, mss_3] :
     if ch is not None :
         st.warning(f"Catched errors : {ch}")
 
