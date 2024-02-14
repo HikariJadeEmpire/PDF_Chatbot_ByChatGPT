@@ -3,3 +3,4 @@
 *.pdf
 chromaDB/*.sqlite3
 *.bin
+docs/.DS_Store
